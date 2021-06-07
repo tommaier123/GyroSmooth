@@ -20,8 +20,8 @@ namespace GyroSmooth
 
         private int counter = 0;
 
-        private string inputfile = @"C:\Workspace\GoproGyroSmooth\unstab.MP4";
-        private string outputfile = @"C:\Workspace\GoproGyroSmooth\stab.MP4";
+        private string inputfile = @"H:\GX010016.MP4";
+        private string outputfile = @"H:\GX010016_smooth.MP4";
 
         private struct Block
         {
@@ -133,14 +133,6 @@ namespace GyroSmooth
             series_z.ChartType = SeriesChartType.FastLine;
             */
 
-            
-            List<short> x_smooth_brk = LowPass(13, x_all);
-
-            for (int i = 0; i < x_smooth_brk.Count; i++)
-            {
-                x_smooth_brk[i] = (short)(Math.Sign(x_smooth_brk[i]) * Math.Min((int)Math.Abs(x_smooth_brk[i]), 600));
-            }
-
             List<short> x_smooth = LowPass(15, x_all);
             List<short> y_smooth = LowPass(15, y_all);
             List<short> z_smooth = LowPass(15, z_all);
@@ -174,7 +166,7 @@ namespace GyroSmooth
                         osr.Write(isr.ReadBytes(step));
                     } while (remaining > 0);
                     Console.WriteLine("writing block - start: " + blocks[0].start + " end: " + blocks[0].end);
-                    osr.Write(Replace(isr.ReadBytes((int)(blocks[0].end - blocks[0].start)), x_smooth, y_smooth, y_smooth));
+                    osr.Write(Replace(isr.ReadBytes((int)(blocks[0].end - blocks[0].start)), x_smooth, y_smooth, z_smooth));
                     blocks.RemoveAt(0);
                 }
 
@@ -182,12 +174,6 @@ namespace GyroSmooth
                 {
                     osr.Write(isr.ReadBytes(10000));
                 }
-            }
-
-
-            for (int i = 0; i < x_smooth.Count; i++)
-            {
-                Console.WriteLine(x_smooth[i].ToString("X4") + " " + x_smooth_brk[i].ToString("X4"));
             }
 
             /*
@@ -229,12 +215,15 @@ namespace GyroSmooth
 
                 for (int j = 0; j < (end - index) / 6; j++)
                 {
-                    databin[index + 0 + j * 6] = (byte)(x[counter]);
-                    databin[index + 1 + j * 6] = (byte)(x[counter] >> 8);
-                    databin[index + 2 + j * 6] = (byte)(y[counter]);
-                    databin[index + 3 + j * 6] = (byte)(y[counter] >> 8);
-                    databin[index + 4 + j * 6] = (byte)(z[counter]);
-                    databin[index + 5 + j * 6] = (byte)(z[counter] >> 8);
+                    char x_c = (char)x[counter];
+                    char y_c = (char)y[counter];
+                    char z_c = (char)z[counter];
+                    databin[index + 0 + j * 6] = (byte)(x_c);
+                    databin[index + 1 + j * 6] = (byte)(x_c >> 8);
+                    databin[index + 2 + j * 6] = (byte)(y_c);
+                    databin[index + 3 + j * 6] = (byte)(y_c >> 8);
+                    databin[index + 4 + j * 6] = (byte)(z_c);
+                    databin[index + 5 + j * 6] = (byte)(z_c >> 8);
 
                     counter++;
                 }
